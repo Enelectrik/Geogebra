@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Talleres de matemática con GeoGebra</title>
+  <meta name="description" content="Talleres autónomos de 30 minutos con GeoGebra para 3.º de Bachillerato: geometría analítica y gráfica de funciones.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="assets/css/estilos.css">
+</head>
+<body>
+  <div id="pestanas"></div>
+
+  <header class="hero">
+    <p class="eyebrow">3.º de Bachillerato · Trabajo autónomo</p>
+    <h1>Aprende matemática <em>moviendo</em> las gráficas</h1>
+    <p class="lead">Talleres de 30 minutos con GeoGebra. En cada uno exploras con deslizadores, repasas las fórmulas, practicas con retroalimentación inmediata y te autoevalúas. Tu progreso se guarda en este navegador.</p>
+    <div class="meta">
+      <span class="chip">⏱ 30 min por taller</span>
+      <span class="chip">10 talleres en 2 grupos</span>
+      <span class="chip">Celular, tablet o PC</span>
+    </div>
+  </header>
+
+  <main class="contenedor">
+    <div id="paneles"></div>
+
+    <section aria-labelledby="como">
+      <h2 id="como" style="font-size:1.5rem;margin:2.5rem 0 0">Cómo trabajar cada taller</h2>
+      <div class="pasos-inicio">
+        <div class="paso-inicio"><h4>Explora</h4><p>Mueve los deslizadores del applet y responde las preguntas guía antes de ver la respuesta.</p></div>
+        <div class="paso-inicio"><h4>Formaliza</h4><p>Lee las fórmulas: cada elemento tiene el mismo color en el texto y en la gráfica.</p></div>
+        <div class="paso-inicio"><h4>Practica</h4><p>Resuelve los ejercicios; el sistema te dice qué está bien y te da pistas.</p></div>
+        <div class="paso-inicio"><h4>Comprueba</h4><p>Haz la autoevaluación, guarda la ficha de síntesis y, si te sobra tiempo, intenta el reto.</p></div>
+      </div>
+    </section>
+
+    <div id="vineta"></div>
+
+    <div class="reinicio">
+      <button type="button" class="btn-secundario" id="reiniciar">Borrar mi progreso</button>
+    </div>
+  </main>
+
+  <footer class="pie">Talleres autónomos de matemática con GeoGebra · 3.º de Bachillerato</footer>
+
+  <script src="assets/js/comun.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var GA = window.GA;
+
+      function tarjeta(t, i) {
+        var p = GA.progresoTaller(t.id);
+        var pct = GA.porcentaje(p);
+        var estado = pct === 0 ? 'Sin empezar' : pct === 100 ? '✓ Completado' : pct + '%';
+        var nota = p.quiz ? '<span class="tt-nota">' + p.quiz.nota + '/' + p.quiz.total + '</span>' : '';
+        var reto = p.reto ? ' ★' : '';
+        return '' +
+          '<a class="tarjeta-taller" style="--c:' + t.color + '" href="talleres/' + t.grupo + '/' + t.id + '/index.html">' +
+            '<div class="tt-top"><div class="tt-icono">' + GA.icono(t.id) + '</div><span class="tt-num">Taller ' + (i + 1) + ' · 30 min</span></div>' +
+            '<h3>' + t.titulo + '</h3>' +
+            '<p>' + t.resumen + '</p>' +
+            '<div class="tt-pie"><div class="tt-barra"><span style="width:' + pct + '%"></span></div><span>' + estado + reto + '</span>' + nota + '</div>' +
+          '</a>';
+      }
+
+      function pintar() {
+        document.getElementById('paneles').innerHTML = GA.GRUPOS.map(function (g) {
+          var lista = GA.talleresDe(g.id);
+          var hechos = lista.filter(function (t) { return GA.porcentaje(GA.progresoTaller(t.id)) === 100; }).length;
+          return '' +
+            '<section class="panel-grupo" id="panel-' + g.id + '" role="tabpanel" aria-label="' + g.titulo + '">' +
+              '<div class="grupo-cab"><div><h2>' + g.titulo + '</h2><p>' + g.descripcion + '</p></div>' +
+              '<span class="chip">' + hechos + ' de ' + lista.length + ' completados</span></div>' +
+              '<div class="grid-talleres">' + lista.map(tarjeta).join('') + '</div>' +
+            '</section>';
+        }).join('');
+      }
+
+      function activar(id) {
+        if (!GA.grupo(id)) id = GA.GRUPOS[0].id;
+        GA.GRUPOS.forEach(function (g) {
+          document.getElementById('panel-' + g.id).hidden = g.id !== id;
+        });
+        document.querySelectorAll('.pestana').forEach(function (a) {
+          var on = a.dataset.grupo === id;
+          a.classList.toggle('activa', on);
+          a.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        var t = GA.talleresDe(id)[0];
+        document.documentElement.style.setProperty('--acento', t ? t.color : '#2563EB');
+      }
+
+      document.getElementById('pestanas').outerHTML = GA.pestanas(GA.GRUPOS[0].id, '');
+      document.getElementById('vineta').innerHTML = GA.vinetaGeogebra(false);
+      pintar();
+      activar(location.hash.slice(1));
+
+      document.querySelectorAll('.pestana').forEach(function (a) {
+        a.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          history.replaceState(null, '', '#' + a.dataset.grupo);
+          activar(a.dataset.grupo);
+        });
+      });
+      window.addEventListener('hashchange', function () { activar(location.hash.slice(1)); });
+      // Al volver con el botón "atrás" se refresca el progreso
+      window.addEventListener('pageshow', function () { pintar(); activar(location.hash.slice(1)); });
+
+      document.getElementById('reiniciar').addEventListener('click', function () {
+        if (confirm('¿Borrar el progreso de todos los talleres en este navegador?')) {
+          GA.reiniciarProgreso();
+          pintar();
+          activar(location.hash.slice(1));
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
