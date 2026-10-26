@@ -38,9 +38,9 @@ Al final de cada taller, el botón **«Crear PDF»** pide el **nombre completo**
 - **Práctica:** lo que escribió en cada casilla con ✓/✗, número de intentos y si usó la pista o consultó la solución.
 - **Autoevaluación:** la respuesta de cada pregunta, la nota del último intento y el historial de intentos.
 - **Reto:** si lo superó, cuántas veces lo comprobó, los valores finales de los deslizadores y si vio la solución antes de lograrlo.
-- Al final, el **tiempo activo** dedicado al taller.
+- Al pie, en letra pequeña y sin etiqueta, el **tiempo activo** en formato `mm:ss` (por ejemplo `24:13`). No se muestra al estudiante durante el taller.
 
-**Tiempo activo:** se cuenta solo con la pestaña del taller visible **y** con actividad (mover el ratón, tocar, escribir o desplazarse) en el último minuto. Si el estudiante cambia de pestaña o deja la página sin tocarla más de 1 minuto, el contador se pausa (en la cabecera se ve «en pausa»). Se acumula entre sesiones en el mismo navegador.
+**Tiempo activo:** se cuenta solo con la pestaña del taller visible **y** con actividad (mover el ratón, tocar, escribir o desplazarse) en el último minuto. Si el estudiante cambia de pestaña o deja la página sin tocarla más de 1 minuto, el conteo se pausa. La medición es silenciosa: no hay contador visible en la página. Se acumula entre sesiones en el mismo navegador.
 
 El PDF se genera en el navegador con [html2pdf.js](https://github.com/eKoopmans/html2pdf.js). Si no carga, el taller abre el diálogo de impresión con el reporte para que el estudiante elija «Guardar como PDF».
 

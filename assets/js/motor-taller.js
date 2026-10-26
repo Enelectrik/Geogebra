@@ -33,12 +33,6 @@
       <header class="cabecera">
         <div class="cabecera-barra">
           <a class="volver" href="${RAIZ}index.html#${meta.grupo}">← Talleres de ${grupo.titulo.toLowerCase()}</a>
-          <div class="cronometro" id="crono" title="Solo cuenta mientras trabajas en esta página. Se pausa si cambias de pestaña o pasas más de 1 minuto sin actividad.">
-            <span class="crono-etq">Tiempo activo</span>
-            <span class="crono-valor" id="crono-valor">${GA.reloj(estado.tiempo)}</span>
-            <span class="crono-meta">/ ${GA.DURACION}:00</span>
-            <span class="crono-estado" id="crono-estado" aria-hidden="true"></span>
-          </div>
         </div>
         <div class="cabecera-titulo">
           <div class="cabecera-icono">${GA.icono(T.id)}</div>
@@ -294,7 +288,7 @@
           <h2>Entrega del taller</h2>
         </header>
         <div class="seccion-cuerpo">
-          <p>Cuando termines, genera el PDF con <b>tu resolución</b>: tus respuestas de conocimientos previos, práctica, autoevaluación y reto, y el <b>tiempo activo</b> que dedicaste al taller. Te pediremos tu nombre completo y tu curso/paralelo.</p>
+          <p>Cuando termines, genera el PDF con <b>tu resolución</b>: tus respuestas de conocimientos previos, práctica, autoevaluación y reto. Te pediremos tu nombre completo y tu curso/paralelo.</p>
           <div class="entrega-resumen" id="entrega-resumen"></div>
         </div>
         <footer class="seccion-pie">
@@ -424,9 +418,6 @@
      (mover el ratón, tocar, escribir, desplazarse) en el último minuto.   */
   (function () {
     const INACTIVO_MS = 60 * 1000;
-    const val = document.getElementById('crono-valor');
-    const caja = document.getElementById('crono');
-    const est = document.getElementById('crono-estado');
     let ultima = Date.now();
     let segundos = estado.tiempo || 0;
     let sinGuardar = 0;
@@ -438,24 +429,16 @@
       sinGuardar = 0;
       guardarSilencioso(t => { t.tiempo = segundos; });
     };
-    const pintar = activo => {
-      val.textContent = GA.reloj(segundos);
-      caja.classList.toggle('excedido', segundos >= GA.DURACION * 60);
-      caja.classList.toggle('pausado', !activo);
-      est.textContent = activo ? '●' : 'en pausa';
-    };
     setInterval(() => {
       const activo = document.visibilityState === 'visible' && (Date.now() - ultima) < INACTIVO_MS;
       if (activo) {
         segundos++; sinGuardar++;
         if (sinGuardar >= 5) persistir();
       }
-      pintar(activo);
     }, 1000);
     document.addEventListener('visibilitychange', persistir);
     window.addEventListener('pagehide', persistir);
     GA._tiempoActual = () => { persistir(); return segundos; };
-    pintar(true);
   })();
 
   /* =================== Previos =================== */
@@ -960,12 +943,8 @@
       <div class="rep-bloque"><h2>3. Autoevaluación</h2>${quiz}</div>
       <div class="rep-bloque"><h2>4. Reto GeoGebra</h2>${reto}</div>
 
-      <div class="rp-tiempo rep-bloque">
-        <span>Tiempo activo dedicado al taller</span>
-        <b>${GA.fmtTiempo(tiempo)}</b>
-        <small>${(tiempo / 60).toFixed(1)} min · cuenta solo con la página abierta y en uso; excluye pausas de más de 1 minuto.</small>
-      </div>
-      <p class="rp-pie">✓ correcta · ✗ incorrecta · ? formato no reconocido · — sin responder &nbsp;|&nbsp; Generado por los Talleres de matemática con GeoGebra</p>`;
+      <p class="rp-pie">✓ correcta · ✗ incorrecta · ? formato no reconocido · — sin responder &nbsp;|&nbsp; Generado por los Talleres de matemática con GeoGebra</p>
+      <p class="rp-t">${GA.reloj(tiempo)}</p>`;
     return el;
   }
 
