@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Talleres de matemática con GeoGebra</title>
-  <meta name="description" content="Talleres autónomos de 30 minutos con GeoGebra para 3.º de Bachillerato: geometría analítica y gráfica de funciones.">
+  <meta name="description" content="Talleres autónomos de 30 minutos con GeoGebra: gráfica de funciones (2.º de Bachillerato) y geometría analítica (3.º de Bachillerato).">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -14,12 +14,13 @@
   <div id="pestanas"></div>
 
   <header class="hero">
-    <p class="eyebrow">3.º de Bachillerato · Trabajo autónomo</p>
+    <p class="eyebrow">2.º y 3.º de Bachillerato · Trabajo autónomo</p>
     <h1>Aprende matemática <em>moviendo</em> las gráficas</h1>
-    <p class="lead">Talleres de 30 minutos con GeoGebra. En cada uno exploras con deslizadores, repasas las fórmulas, practicas con retroalimentación inmediata y te autoevalúas. Tu progreso se guarda en este navegador.</p>
+    <p class="lead">Talleres de 30 minutos con GeoGebra. En cada uno exploras con deslizadores, repasas las fórmulas, practicas con retroalimentación inmediata y te autoevalúas. Al final de cada taller generas un PDF con tu resolución y tu tiempo de trabajo para entregarlo.</p>
     <div class="meta">
       <span class="chip">⏱ 30 min por taller</span>
       <span class="chip">10 talleres en 2 grupos</span>
+      <span class="chip">Entrega en PDF</span>
       <span class="chip">Celular, tablet o PC</span>
     </div>
   </header>
@@ -34,6 +35,7 @@
         <div class="paso-inicio"><h4>Formaliza</h4><p>Lee las fórmulas: cada elemento tiene el mismo color en el texto y en la gráfica.</p></div>
         <div class="paso-inicio"><h4>Practica</h4><p>Resuelve los ejercicios; el sistema te dice qué está bien y te da pistas.</p></div>
         <div class="paso-inicio"><h4>Comprueba</h4><p>Haz la autoevaluación, guarda la ficha de síntesis y, si te sobra tiempo, intenta el reto.</p></div>
+        <div class="paso-inicio"><h4>Entrega</h4><p>Pulsa «Crear PDF» al final del taller, escribe tu nombre y curso/paralelo, y entrega el archivo a tu docente.</p></div>
       </div>
     </section>
 
@@ -44,7 +46,7 @@
     </div>
   </main>
 
-  <footer class="pie">Talleres autónomos de matemática con GeoGebra · 3.º de Bachillerato</footer>
+  <footer class="pie">Talleres autónomos de matemática con GeoGebra · 2.º y 3.º de Bachillerato</footer>
 
   <script src="assets/js/comun.js"></script>
   <script>
@@ -73,7 +75,7 @@
           var hechos = lista.filter(function (t) { return GA.porcentaje(GA.progresoTaller(t.id)) === 100; }).length;
           return '' +
             '<section class="panel-grupo" id="panel-' + g.id + '" role="tabpanel" aria-label="' + g.titulo + '">' +
-              '<div class="grupo-cab"><div><h2>' + g.titulo + '</h2><p>' + g.descripcion + '</p></div>' +
+              '<div class="grupo-cab"><div><p class="eyebrow" style="color:' + (lista[0] ? lista[0].color : '') + '">' + g.nivel + '</p><h2>' + g.titulo + '</h2><p>' + g.descripcion + '</p></div>' +
               '<span class="chip">' + hechos + ' de ' + lista.length + ' completados</span></div>' +
               '<div class="grid-talleres">' + lista.map(tarjeta).join('') + '</div>' +
             '</section>';

@@ -1,8 +1,8 @@
 # Talleres de matemática con GeoGebra
 
-Sitio web estático con **10 talleres autónomos de 30 minutos** para estudiantes de 3.º de Bachillerato, organizados en dos pestañas:
+Sitio web estático con **10 talleres autónomos de 30 minutos**, organizados en dos pestañas:
 
-| Geometría analítica | Gráfica de funciones |
+| Geometría analítica — 3.º de Bachillerato | Gráfica de funciones — 2.º de Bachillerato |
 |---|---|
 | 1. La recta | 1. Composición de funciones |
 | 2. La circunferencia | 2. Funciones cuadráticas |
@@ -23,9 +23,28 @@ Cada taller tiene la misma estructura (los minutos aparecen en pantalla y suman 
 | 6 | Práctica autónoma (4 ejercicios con corrección automática y pistas) | 7 min |
 | 7 | Autoevaluación (5 preguntas con retroalimentación por opción) | 4 min |
 | 8 | Ficha de síntesis imprimible | 1 min |
-| ★ | Reto GeoGebra (comprobación automática) | extra |
+| ★ | Reto GeoGebra (comprobación automática; la solución se habilita solo después de pulsar «Comprobar reto») | extra |
+| ⤓ | Entrega: botón **«Crear PDF»** | — |
 
-El progreso de cada estudiante (secciones, nota, reto) se guarda en su navegador (`localStorage`). No hay servidor ni base de datos.
+El progreso de cada estudiante (respuestas, intentos, nota, reto y tiempo) se guarda en su navegador (`localStorage`). No hay servidor ni base de datos.
+
+### Entrega en PDF
+
+Al final de cada taller, el botón **«Crear PDF»** pide el **nombre completo** y el **curso/paralelo** del estudiante (se recuerdan para los demás talleres) y descarga un archivo `Taller_<tema>_<Nombre>.pdf` con:
+
+- Datos del estudiante, taller, nivel y fecha de entrega.
+- Resumen: secciones completadas, ejercicios resueltos, nota de la autoevaluación y estado del reto.
+- **Conocimientos previos:** la primera respuesta elegida, con ✓ o ✗.
+- **Práctica:** lo que escribió en cada casilla con ✓/✗, número de intentos y si usó la pista o consultó la solución.
+- **Autoevaluación:** la respuesta de cada pregunta, la nota del último intento y el historial de intentos.
+- **Reto:** si lo superó, cuántas veces lo comprobó, los valores finales de los deslizadores y si vio la solución antes de lograrlo.
+- Al final, el **tiempo activo** dedicado al taller.
+
+**Tiempo activo:** se cuenta solo con la pestaña del taller visible **y** con actividad (mover el ratón, tocar, escribir o desplazarse) en el último minuto. Si el estudiante cambia de pestaña o deja la página sin tocarla más de 1 minuto, el contador se pausa (en la cabecera se ve «en pausa»). Se acumula entre sesiones en el mismo navegador.
+
+El PDF se genera en el navegador con [html2pdf.js](https://github.com/eKoopmans/html2pdf.js). Si no carga, el taller abre el diálogo de impresión con el reporte para que el estudiante elija «Guardar como PDF».
+
+> El progreso vive en el navegador del estudiante: si cambia de dispositivo o borra los datos del navegador, empieza de cero. Los datos del PDF los genera el propio navegador del estudiante, así que deben tomarse como un registro de trabajo, no como un control a prueba de manipulaciones.
 
 ---
 
@@ -41,7 +60,7 @@ El progreso de cada estudiante (secciones, nota, reto) se guarda en su navegador
    > git remote add origin https://github.com/TU-USUARIO/talleres-geogebra.git
    > git push -u origin main
    > ```
-4. **Activa Pages**: **Settings → Pages**. En *Build and deployment*, *Source*: **Deploy from a branch**; *Branch*: **main** y carpeta **/ (root)** → **Save**.
+4. **Activa Pages** (gratis si el repositorio es **público**; para repositorios privados GitHub pide un plan de pago): **Settings → Pages**. En *Build and deployment*, *Source*: **Deploy from a branch**; *Branch*: **main** y carpeta **/ (root)** → **Save**.
 5. Espera 1–2 minutos y recarga la página de Settings → Pages. Aparecerá la dirección:
    `https://TU-USUARIO.github.io/talleres-geogebra/`
 6. Comparte esa dirección con tus estudiantes. Para enlazar directo a un grupo: `.../index.html#funciones` o `.../index.html#geometria`.
@@ -103,6 +122,6 @@ Se definen **una sola vez** en `assets/js/comun.js` → `GA.VIDEOS_GEOGEBRA`. Ca
 
 ## Tecnologías
 
-HTML + CSS + JavaScript sin dependencias de compilación · [GeoGebra Apps API](https://geogebra.github.io/docs/reference/en/GeoGebra_Apps_API/) (`deployggb.js`) · [KaTeX](https://katex.org) para las fórmulas · Google Fonts (Bricolage Grotesque, Atkinson Hyperlegible, JetBrains Mono).
+HTML + CSS + JavaScript sin dependencias de compilación · [GeoGebra Apps API](https://geogebra.github.io/docs/reference/en/GeoGebra_Apps_API/) (`deployggb.js`) · [KaTeX](https://katex.org) para las fórmulas · [html2pdf.js](https://github.com/eKoopmans/html2pdf.js) para el PDF de entrega · Google Fonts (Bricolage Grotesque, Atkinson Hyperlegible, JetBrains Mono).
 
-Requiere conexión a internet (GeoGebra, KaTeX y las fuentes se cargan desde sus servidores). Si GeoGebra no carga, el taller muestra un enlace para abrirlo aparte y los comandos para reproducir el applet.
+Requiere conexión a internet (GeoGebra, KaTeX, html2pdf.js y las fuentes se cargan desde sus servidores). Si GeoGebra no carga, el taller muestra un enlace para abrirlo aparte y los comandos para reproducir el applet.

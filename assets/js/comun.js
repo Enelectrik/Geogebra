@@ -14,9 +14,9 @@
   /* ---------- Grupos (pestañas superiores) y talleres ----------
      Cada taller vive en talleres/<grupo>/<id>/index.html          */
   GA.GRUPOS = [
-    { id: 'geometria', titulo: 'Geometría analítica',
+    { id: 'geometria', titulo: 'Geometría analítica', nivel: '3.º de Bachillerato', cursoEj: '3.º BGU – A',
       descripcion: 'La recta y las cónicas: todas sus características, explorando con GeoGebra.' },
-    { id: 'funciones', titulo: 'Gráfica de funciones',
+    { id: 'funciones', titulo: 'Gráfica de funciones', nivel: '2.º de Bachillerato', cursoEj: '2.º BGU – A',
       descripcion: 'Composición, cuadráticas, inversas, exponenciales y logarítmicas: cómo se ven y cómo se transforman.' }
   ];
   GA.TALLERES = [
@@ -122,7 +122,42 @@
   GA.guardarProgreso = function (p) {
     try { localStorage.setItem(CLAVE, JSON.stringify(p)); } catch (e) { /* almacenamiento no disponible */ }
   };
-  GA.vacio = () => ({ secciones: {}, practica: {}, quiz: null, reto: false });
+  /* Estado de un taller. Todo lo que el estudiante hace queda aquí para el PDF. */
+  GA.vacio = () => ({
+    secciones: {},      // id de sección → true
+    practica: {},       // ejercicio → 'ok' | 'visto'
+    quiz: null,         // { nota, total, fecha, respuestas: [índice|null] }
+    quizIntentos: [],   // notas de cada intento
+    reto: false,        // reto superado
+    tiempo: 0,          // segundos de trabajo activo
+    previos: {},        // pregunta → opción elegida
+    resp: {},           // ejercicio → { campo → texto escrito }
+    intentos: {},       // ejercicio → nº de veces que pulsó "Comprobar"
+    pistas: {},         // ejercicio → true si abrió la pista
+    solVista: {},       // ejercicio → true si abrió la solución
+    retoIntentos: 0, retoValores: null, retoSolVista: false, retoSolAntes: false
+  });
+
+  /* Datos del estudiante (compartidos por todos los talleres) */
+  const CLAVE_EST = 'ga-estudiante-v1';
+  GA.leerEstudiante = function () {
+    try { return JSON.parse(localStorage.getItem(CLAVE_EST)) || { nombre: '', curso: '' }; } catch (e) { return { nombre: '', curso: '' }; }
+  };
+  GA.guardarEstudiante = function (d) {
+    try { localStorage.setItem(CLAVE_EST, JSON.stringify(d)); } catch (e) { /* nada */ }
+  };
+
+  /* 1453 s → "24 min 13 s" */
+  GA.fmtTiempo = function (seg) {
+    seg = Math.max(0, Math.round(seg || 0));
+    const h = Math.floor(seg / 3600), m = Math.floor((seg % 3600) / 60), s = seg % 60;
+    return (h ? h + ' h ' : '') + m + ' min ' + String(s).padStart(2, '0') + ' s';
+  };
+  /* 1453 s → "24:13" */
+  GA.reloj = function (seg) {
+    seg = Math.max(0, Math.floor(seg || 0));
+    return String(Math.floor(seg / 60)).padStart(2, '0') + ':' + String(seg % 60).padStart(2, '0');
+  };
   GA.progresoTaller = function (id) {
     return Object.assign(GA.vacio(), GA.leerProgreso()[id] || {});
   };

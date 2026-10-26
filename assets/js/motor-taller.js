@@ -1,7 +1,9 @@
 /* =====================================================================
    motor-taller.js — Construye un taller a partir de window.TALLER (datos.js)
    Secciones: objetivos, previos, exploración (GeoGebra), teoría, ejemplos,
-   práctica, autoevaluación, ficha + reto GeoGebra opcional.
+   práctica, autoevaluación, ficha + reto GeoGebra + entrega en PDF.
+   Registra lo que hace el estudiante (respuestas, intentos, tiempo activo)
+   para incluirlo en el PDF de entrega.
    ===================================================================== */
 (function () {
   'use strict';
@@ -21,6 +23,7 @@
 
   let estado = GA.progresoTaller(T.id);
   const guardar = fn => { estado = GA.actualizarTaller(T.id, fn); refrescarProgreso(); };
+  const guardarSilencioso = fn => { estado = GA.actualizarTaller(T.id, fn); };
 
   /* =================== Plantillas =================== */
 
@@ -30,21 +33,24 @@
       <header class="cabecera">
         <div class="cabecera-barra">
           <a class="volver" href="${RAIZ}index.html#${meta.grupo}">← Talleres de ${grupo.titulo.toLowerCase()}</a>
-          <div class="cronometro" id="crono">
-            <span class="crono-valor" id="crono-valor">00:00 / ${GA.DURACION}:00</span>
-            <button type="button" class="btn-mini" id="crono-btn">Iniciar cronómetro</button>
+          <div class="cronometro" id="crono" title="Solo cuenta mientras trabajas en esta página. Se pausa si cambias de pestaña o pasas más de 1 minuto sin actividad.">
+            <span class="crono-etq">Tiempo activo</span>
+            <span class="crono-valor" id="crono-valor">${GA.reloj(estado.tiempo)}</span>
+            <span class="crono-meta">/ ${GA.DURACION}:00</span>
+            <span class="crono-estado" id="crono-estado" aria-hidden="true"></span>
           </div>
         </div>
         <div class="cabecera-titulo">
           <div class="cabecera-icono">${GA.icono(T.id)}</div>
           <div>
-            <p class="eyebrow">Taller ${pos + 1} de ${hermanos.length} · ${grupo.titulo}</p>
+            <p class="eyebrow">Taller ${pos + 1} de ${hermanos.length} · ${grupo.titulo} · ${grupo.nivel}</p>
             <h1>${meta.titulo}</h1>
             <p class="subtitulo">${T.subtitulo}</p>
             <div class="meta">
               <span class="chip">⏱ ${GA.DURACION} minutos</span>
               <span class="chip">${GA.SECCIONES.length} secciones</span>
               <span class="chip">Trabajo autónomo</span>
+              <span class="chip">📄 Entrega en PDF</span>
             </div>
           </div>
         </div>
@@ -68,6 +74,9 @@
         <ol>${items}
           <li class="ind-extra"><a href="#sec-reto" data-ir="reto">
             <span class="ind-num">★</span><span class="ind-tit">Reto GeoGebra</span><span class="ind-min">extra</span>
+          </a></li>
+          <li><a href="#sec-entrega" data-ir="entrega">
+            <span class="ind-num">⤓</span><span class="ind-tit">Entrega en PDF</span><span class="ind-min"></span>
           </a></li>
         </ol>
       </nav>`;
@@ -213,7 +222,7 @@
         </details>
       </article>`).join('');
     return seccion('practica', `
-      <p class="nota">Escribe números como <code>2.5</code> o <code>2,5</code>, fracciones como <code>-3/4</code>, raíces como <code>raiz(7)</code> o <code>√7</code>. Si el resultado no es exacto, usa al menos 2 decimales.</p>
+      <p class="nota">Escribe números como <code>2.5</code> o <code>2,5</code>, fracciones como <code>-3/4</code>, raíces como <code>raiz(7)</code> o <code>√7</code>. Si el resultado no es exacto, usa al menos 2 decimales. Tus respuestas se guardan y aparecerán en el PDF de entrega.</p>
       ${ej}`);
   }
 
@@ -250,7 +259,7 @@
         </div>
         ${T.ficha}
       </div>`,
-      `<button type="button" class="btn-secundario" id="imprimir-ficha">🖨 Imprimir / guardar como PDF</button>`);
+      `<button type="button" class="btn-secundario" id="imprimir-ficha">🖨 Imprimir / guardar ficha</button>`);
   }
 
   /* ---------- Reto (opcional) ---------- */
@@ -270,9 +279,53 @@
             <button type="button" class="btn-primario" id="reto-comprobar">Comprobar reto</button>
           </div>
           <div class="reto-retro" id="reto-retro" hidden></div>
-          <details class="solucion"><summary>Ver solución del reto</summary><div>${r.solucion}</div></details>
+          <p class="nota" id="reto-aviso-sol">🔒 La solución se habilita después de que compruebes tu respuesta al menos una vez.</p>
+          <details class="solucion" id="reto-sol" hidden><summary>Ver solución del reto</summary><div>${r.solucion}</div></details>
         </div>
       </section>`;
+  }
+
+  /* ---------- Entrega en PDF ---------- */
+  function secEntrega() {
+    return `
+      <section class="seccion seccion-entrega" id="sec-entrega">
+        <header class="seccion-cab">
+          <span class="seccion-num">⤓</span>
+          <h2>Entrega del taller</h2>
+        </header>
+        <div class="seccion-cuerpo">
+          <p>Cuando termines, genera el PDF con <b>tu resolución</b>: tus respuestas de conocimientos previos, práctica, autoevaluación y reto, y el <b>tiempo activo</b> que dedicaste al taller. Te pediremos tu nombre completo y tu curso/paralelo.</p>
+          <div class="entrega-resumen" id="entrega-resumen"></div>
+        </div>
+        <footer class="seccion-pie">
+          <button type="button" class="btn-primario btn-grande" id="crear-pdf">📄 Crear PDF</button>
+        </footer>
+      </section>`;
+  }
+
+  function dialogoEstudiante() {
+    return `
+      <dialog class="dialogo" id="dlg-estudiante" aria-labelledby="dlg-tit">
+        <form method="dialog" id="form-estudiante" novalidate>
+          <h2 id="dlg-tit">Datos para el PDF</h2>
+          <p class="nota">Aparecerán en el documento como el estudiante que realizó el taller.</p>
+          <label class="dlg-campo">
+            <span>Nombre completo</span>
+            <input id="est-nombre" type="text" autocomplete="name" maxlength="80" placeholder="Nombres y apellidos" required>
+            <small class="dlg-error" id="err-nombre" hidden>Escribe tu nombre y al menos un apellido.</small>
+          </label>
+          <label class="dlg-campo">
+            <span>Curso / paralelo</span>
+            <input id="est-curso" type="text" maxlength="40" placeholder="Ej.: ${grupo.cursoEj}" required>
+            <small class="dlg-error" id="err-curso" hidden>Escribe tu curso y paralelo.</small>
+          </label>
+          <div class="dlg-acciones">
+            <button type="button" class="btn-secundario" id="dlg-cancelar">Cancelar</button>
+            <button type="submit" class="btn-primario" id="dlg-generar">Generar PDF</button>
+          </div>
+          <p class="dlg-estado" id="dlg-estado" aria-live="polite"></p>
+        </form>
+      </dialog>`;
   }
 
   function navTalleres() {
@@ -302,10 +355,13 @@
         ${secQuiz()}
         ${secFicha()}
         ${secReto()}
+        ${secEntrega()}
         ${navTalleres()}
       </main>
     </div>
-    <footer class="pie">Talleres autónomos de matemática con GeoGebra · 3.º de Bachillerato · Tu progreso se guarda solo en este navegador.</footer>`;
+    ${dialogoEstudiante()}
+    <div id="reporte-impresion" aria-hidden="true"></div>
+    <footer class="pie">Talleres autónomos de matemática con GeoGebra · ${grupo.nivel} · Tu progreso se guarda solo en este navegador.</footer>`;
 
   GA.renderMath(app);
 
@@ -333,6 +389,7 @@
     });
     const ar = document.querySelector('.indice a[data-ir="reto"]');
     if (ar) ar.classList.toggle('hecha', !!estado.reto);
+    pintarResumenEntrega();
   }
   function completar(id, valor) {
     guardar(t => { t.secciones[id] = valor === undefined ? true : valor; });
@@ -362,47 +419,68 @@
     document.querySelectorAll('.seccion').forEach(s => obs.observe(s));
   }
 
-  /* =================== Cronómetro =================== */
+  /* =================== Tiempo activo ===================
+     Suma 1 s cada segundo SOLO si la pestaña está visible y hubo actividad
+     (mover el ratón, tocar, escribir, desplazarse) en el último minuto.   */
   (function () {
-    const btn = document.getElementById('crono-btn');
+    const INACTIVO_MS = 60 * 1000;
     const val = document.getElementById('crono-valor');
     const caja = document.getElementById('crono');
-    let inicio = null, acumulado = 0, timer = null;
-    const pintar = () => {
-      const ms = acumulado + (inicio ? Date.now() - inicio : 0);
-      const s = Math.floor(ms / 1000);
-      const mm = String(Math.floor(s / 60)).padStart(2, '0');
-      const ss = String(s % 60).padStart(2, '0');
-      val.textContent = `${mm}:${ss} / ${GA.DURACION}:00`;
-      caja.classList.toggle('excedido', s >= GA.DURACION * 60);
+    const est = document.getElementById('crono-estado');
+    let ultima = Date.now();
+    let segundos = estado.tiempo || 0;
+    let sinGuardar = 0;
+    const marcar = () => { ultima = Date.now(); };
+    ['pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'scroll', 'input'].forEach(ev =>
+      window.addEventListener(ev, marcar, { capture: true, passive: true }));
+    const persistir = () => {
+      if (!sinGuardar) return;
+      sinGuardar = 0;
+      guardarSilencioso(t => { t.tiempo = segundos; });
     };
-    btn.addEventListener('click', () => {
-      if (inicio) {
-        acumulado += Date.now() - inicio; inicio = null;
-        clearInterval(timer); btn.textContent = 'Continuar';
-      } else {
-        inicio = Date.now(); timer = setInterval(pintar, 1000);
-        btn.textContent = 'Pausar';
+    const pintar = activo => {
+      val.textContent = GA.reloj(segundos);
+      caja.classList.toggle('excedido', segundos >= GA.DURACION * 60);
+      caja.classList.toggle('pausado', !activo);
+      est.textContent = activo ? '●' : 'en pausa';
+    };
+    setInterval(() => {
+      const activo = document.visibilityState === 'visible' && (Date.now() - ultima) < INACTIVO_MS;
+      if (activo) {
+        segundos++; sinGuardar++;
+        if (sinGuardar >= 5) persistir();
       }
-      pintar();
-    });
+      pintar(activo);
+    }, 1000);
+    document.addEventListener('visibilitychange', persistir);
+    window.addEventListener('pagehide', persistir);
+    GA._tiempoActual = () => { persistir(); return segundos; };
+    pintar(true);
   })();
 
   /* =================== Previos =================== */
-  document.querySelectorAll('[data-previo]').forEach(fs => {
-    const q = T.previos[+fs.dataset.previo];
+  function pintarPrevio(fs, q, oi) {
     const retro = fs.querySelector('.retro');
+    const ok = oi === q.correcta;
+    const botones = fs.querySelectorAll('.opcion-rapida');
+    botones.forEach(x => x.classList.remove('ok', 'mal'));
+    botones[oi].classList.add(ok ? 'ok' : 'mal');
+    if (!ok) botones[q.correcta].classList.add('ok');
+    fs.dataset.respondida = '1';
+    retro.hidden = false;
+    retro.className = 'retro ' + (ok ? 'retro-ok' : 'retro-mal');
+    retro.innerHTML = (ok ? '<b>¡Correcto!</b> ' : '<b>Repasa:</b> ') + q.explicacion;
+    GA.renderMath(retro);
+  }
+  document.querySelectorAll('[data-previo]').forEach(fs => {
+    const qi = +fs.dataset.previo;
+    const q = T.previos[qi];
+    if (estado.previos[qi] != null) pintarPrevio(fs, q, estado.previos[qi]);
     fs.querySelectorAll('.opcion-rapida').forEach(b => b.addEventListener('click', () => {
       const oi = +b.dataset.op;
-      const ok = oi === q.correcta;
-      fs.querySelectorAll('.opcion-rapida').forEach(x => x.classList.remove('ok', 'mal'));
-      b.classList.add(ok ? 'ok' : 'mal');
-      if (!ok) fs.querySelectorAll('.opcion-rapida')[q.correcta].classList.add('ok');
-      fs.dataset.respondida = '1';
-      retro.hidden = false;
-      retro.className = 'retro ' + (ok ? 'retro-ok' : 'retro-mal');
-      retro.innerHTML = (ok ? '<b>¡Correcto!</b> ' : '<b>Repasa:</b> ') + q.explicacion;
-      GA.renderMath(retro);
+      // Se registra la PRIMERA respuesta (la que cuenta para el PDF)
+      if (estado.previos[qi] == null) guardar(t => { t.previos[qi] = oi; });
+      pintarPrevio(fs, q, oi);
       const todas = [...document.querySelectorAll('[data-previo]')].every(f => f.dataset.respondida);
       if (todas && !estado.secciones.previos) completar('previos');
     }));
@@ -410,6 +488,7 @@
 
   /* =================== Práctica =================== */
   function evaluarCampo(c, valor) {
+    if (valor == null || String(valor).trim() === '') return undefined; // vacío
     if (c.tipo === 'opcion') return valor === c.respuesta;
     const v = GA.evaluarExpresion(valor);
     if (!isFinite(v)) return null; // no se entendió
@@ -425,33 +504,41 @@
     const e = T.practica[ei];
     const retro = art.querySelector('.retro-ej');
     const est = art.querySelector('.ej-estado');
-    const marcar = tipo => {
+    const marcar = () => {
       art.classList.remove('resuelto', 'visto');
-      if (tipo === 'ok') { art.classList.add('resuelto'); est.textContent = '✓ Resuelto'; }
-      if (tipo === 'visto') { art.classList.add('visto'); est.textContent = 'Solución vista'; }
+      est.textContent = '';
+      if (estado.practica[ei] === 'ok') { art.classList.add('resuelto'); est.textContent = '✓ Resuelto'; }
+      else if (estado.practica[ei] === 'visto') { art.classList.add('visto'); est.textContent = 'Solución vista'; }
     };
-    if (estado.practica[ei]) marcar(estado.practica[ei]);
 
-    art.querySelector('[data-comprobar]').addEventListener('click', () => {
+    function revisar(contar) {
       let bien = 0, vacios = 0, raros = 0;
+      const valores = {};
       e.campos.forEach((c, ci) => {
         const caja = art.querySelector(`[data-campo="${ci}"]`);
         const inp = caja.querySelector('input,select');
         const marca = caja.querySelector('.marca');
+        valores[ci] = inp.value;
         caja.classList.remove('ok', 'mal');
-        if (!inp.value.trim()) { vacios++; marca.textContent = ''; return; }
         const r = evaluarCampo(c, inp.value);
+        if (r === undefined) { vacios++; marca.textContent = ''; return; }
         if (r === null) { raros++; caja.classList.add('mal'); marca.textContent = '?'; return; }
         caja.classList.add(r ? 'ok' : 'mal');
         marca.textContent = r ? '✓' : '✗';
         if (r) bien++;
       });
       retro.hidden = false;
-      if (bien === e.campos.length) {
+      const todo = bien === e.campos.length;
+      if (contar) {
+        guardar(t => {
+          t.resp[ei] = valores;
+          t.intentos[ei] = (t.intentos[ei] || 0) + 1;
+          if (todo) t.practica[ei] = 'ok';
+        });
+      }
+      if (todo) {
         retro.className = 'retro-ej retro-ok';
         retro.textContent = '¡Excelente! Todas las respuestas son correctas.';
-        if (estado.practica[ei] !== 'ok') guardar(t => { t.practica[ei] = 'ok'; });
-        marcar('ok');
         revisarPracticaCompleta();
       } else {
         retro.className = 'retro-ej retro-mal';
@@ -462,17 +549,41 @@
         partes.push('Revisa la pista o vuelve a intentarlo.');
         retro.textContent = partes.join(' ');
       }
+      marcar();
+    }
+
+    // Restaurar lo que el estudiante ya había escrito
+    const previas = estado.resp[ei];
+    if (previas) {
+      e.campos.forEach((c, ci) => {
+        const inp = art.querySelector(`[data-campo="${ci}"] input, [data-campo="${ci}"] select`);
+        if (previas[ci] != null) inp.value = previas[ci];
+      });
+      if (estado.intentos[ei]) revisar(false);
+    }
+    marcar();
+
+    // Guardar borradores mientras escribe
+    art.querySelectorAll('input,select').forEach((inp, ci) => {
+      inp.addEventListener('change', () => guardarSilencioso(t => {
+        t.resp[ei] = Object.assign({}, t.resp[ei] || {}, { [ci]: inp.value });
+      }));
     });
+
+    art.querySelector('[data-comprobar]').addEventListener('click', () => revisar(true));
     art.querySelector('[data-pista]').addEventListener('click', () => {
       const p = art.querySelector('.pista');
       p.hidden = !p.hidden;
+      if (!p.hidden && !estado.pistas[ei]) guardarSilencioso(t => { t.pistas[ei] = true; });
     });
     art.querySelector('[data-sol]').addEventListener('toggle', ev => {
-      if (ev.target.open && !estado.practica[ei]) {
-        guardar(t => { t.practica[ei] = 'visto'; });
-        marcar('visto');
-        revisarPracticaCompleta();
-      }
+      if (!ev.target.open) return;
+      guardar(t => {
+        t.solVista[ei] = true;
+        if (!t.practica[ei]) t.practica[ei] = 'visto';
+      });
+      marcar();
+      revisarPracticaCompleta();
     });
   });
 
@@ -481,34 +592,35 @@
     const form = document.getElementById('quiz');
     const res = document.getElementById('quiz-resultado');
     const reintentar = document.getElementById('quiz-reintentar');
-    form.addEventListener('submit', ev => {
-      ev.preventDefault();
+
+    function pintarQuiz(respuestas) {
       let nota = 0, sinResp = 0;
       T.quiz.forEach((q, qi) => {
         const fs = form.querySelector(`[data-quiz="${qi}"]`);
-        const sel = fs.querySelector('input:checked');
         const retro = fs.querySelector('.retro-quiz');
-        fs.querySelectorAll('.opcion-quiz').forEach((l, oi) => {
+        const oi = respuestas[qi];
+        const inputs = fs.querySelectorAll('input');
+        if (oi != null) inputs[oi].checked = true;
+        fs.querySelectorAll('.opcion-quiz').forEach((l, k) => {
           l.classList.remove('ok', 'mal');
-          if (oi === q.correcta) l.classList.add('ok');
+          if (k === q.correcta) l.classList.add('ok');
         });
         retro.hidden = false;
-        if (!sel) {
+        if (oi == null) {
           sinResp++;
           retro.className = 'retro-quiz retro-mal';
           retro.innerHTML = `<b>Sin respuesta.</b> ${q.retro[q.correcta]}`;
         } else {
-          const oi = +sel.value;
           const ok = oi === q.correcta;
           if (ok) nota++;
-          else sel.closest('.opcion-quiz').classList.add('mal');
+          else inputs[oi].closest('.opcion-quiz').classList.add('mal');
           retro.className = 'retro-quiz ' + (ok ? 'retro-ok' : 'retro-mal');
           retro.innerHTML = ok
             ? `<b>¡Correcto!</b> ${q.retro[oi]}`
             : `<b>Incorrecto.</b> ${q.retro[oi]}<br><span class="correcta-era">Respuesta correcta: ${q.opciones[q.correcta]}.</span> ${q.retro[q.correcta]}`;
         }
         GA.renderMath(retro);
-        fs.querySelectorAll('input').forEach(i => { i.disabled = true; });
+        inputs.forEach(i => { i.disabled = true; });
       });
       const total = T.quiz.length;
       const pct = Math.round((100 * nota) / total);
@@ -520,14 +632,27 @@
       res.innerHTML = `<span class="nota-grande">${nota}/${total}</span><span>${msj}${sinResp ? ` (${sinResp} sin responder)` : ''}</span>`;
       form.querySelector('[type=submit]').hidden = true;
       reintentar.hidden = false;
+      return nota;
+    }
+
+    if (estado.quiz && estado.quiz.respuestas) pintarQuiz(estado.quiz.respuestas);
+
+    form.addEventListener('submit', ev => {
+      ev.preventDefault();
+      const respuestas = T.quiz.map((q, qi) => {
+        const sel = form.querySelector(`[data-quiz="${qi}"] input:checked`);
+        return sel ? +sel.value : null;
+      });
+      const nota = pintarQuiz(respuestas);
       guardar(t => {
-        t.quiz = { nota, total, fecha: new Date().toISOString() };
+        t.quiz = { nota, total: T.quiz.length, fecha: new Date().toISOString(), respuestas };
+        t.quizIntentos = (t.quizIntentos || []).concat(nota);
         t.secciones.autoevaluacion = true;
       });
     });
     reintentar.addEventListener('click', () => {
       form.reset();
-      form.querySelectorAll('input').forEach(i => { i.disabled = false; });
+      form.querySelectorAll('input').forEach(i => { i.disabled = false; i.checked = false; });
       form.querySelectorAll('.opcion-quiz').forEach(l => l.classList.remove('ok', 'mal'));
       form.querySelectorAll('.retro-quiz').forEach(r => { r.hidden = true; });
       res.hidden = true;
@@ -539,13 +664,16 @@
 
   /* =================== Ficha =================== */
   document.getElementById('imprimir-ficha').addEventListener('click', () => {
-    document.body.classList.add('imprimiendo-ficha');
-    const fin = () => { document.body.classList.remove('imprimiendo-ficha'); window.removeEventListener('afterprint', fin); };
+    imprimirCon('imprimiendo-ficha');
+    if (!estado.secciones.ficha) completar('ficha');
+  });
+  function imprimirCon(clase) {
+    document.body.classList.add(clase);
+    const fin = () => { document.body.classList.remove(clase); window.removeEventListener('afterprint', fin); };
     window.addEventListener('afterprint', fin);
     window.print();
     setTimeout(fin, 1500);
-    if (!estado.secciones.ficha) completar('ficha');
-  });
+  }
 
   /* =================== GeoGebra =================== */
   const APIS = {};
@@ -558,7 +686,6 @@
 
   function configurar(api, cfg) {
     cfg.comandos.forEach(c => api.evalCommand(c));
-    // Todas las etiquetas apagadas; luego se encienden las definidas
     api.getAllObjectNames().forEach(n => { try { api.setLabelVisible(n, false); } catch (e) { /* */ } });
     Object.entries(cfg.estilos || {}).forEach(([n, s]) => {
       if (!api.exists(n)) return;
@@ -643,7 +770,6 @@
     new window.GGBApplet(params, true).inject('ggb-' + clave);
   }
 
-  // Carga diferida: cada applet se crea cuando su sección se acerca a la pantalla
   const contenedores = document.querySelectorAll('[data-applet]');
   if ('IntersectionObserver' in window) {
     const obsGgb = new IntersectionObserver(ents => {
@@ -672,7 +798,21 @@
     if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, () => {});
   }));
 
-  /* Reto */
+  /* =================== Reto =================== */
+  // Nombres de los deslizadores y casillas del reto (para registrar los valores en el PDF)
+  const VARIABLES_RETO = T.reto.applet.comandos.map(c => {
+    const m = /^(\w+) = (?:Slider\(|true$|false$)/.exec(c);
+    return m ? m[1] : null;
+  }).filter(Boolean);
+
+  const retoSol = document.getElementById('reto-sol');
+  const retoAviso = document.getElementById('reto-aviso-sol');
+  function habilitarSolucionReto() {
+    retoSol.hidden = false;
+    retoAviso.hidden = true;
+  }
+  if (estado.retoIntentos > 0) habilitarSolucionReto();
+
   document.getElementById('reto-comprobar').addEventListener('click', () => {
     const caja = document.getElementById('reto-retro');
     const api = APIS.reto;
@@ -683,13 +823,234 @@
       return;
     }
     const r = T.reto.comprobar(api);
+    const valores = {};
+    VARIABLES_RETO.forEach(n => {
+      const v = api.getValue(n);
+      valores[n] = /^(vertical|ver\w*|mostrar\w*)$/.test(n) ? (v ? 'sí' : 'no') : GA.fmt(v);
+    });
     caja.className = 'reto-retro ' + (r.ok ? 'retro-ok' : 'retro-mal');
     caja.innerHTML = r.ok
       ? '<b>★ ¡Reto superado!</b> ' + (r.mensajes || []).join(' ')
       : '<b>Aún no.</b><ul>' + r.mensajes.map(m => `<li>${m}</li>`).join('') + '</ul>';
     GA.renderMath(caja);
-    if (r.ok && !estado.reto) guardar(t => { t.reto = true; });
+    guardar(t => {
+      t.retoIntentos = (t.retoIntentos || 0) + 1;
+      t.retoValores = valores;
+      if (r.ok) t.reto = true;
+    });
+    habilitarSolucionReto();
   });
+  retoSol.addEventListener('toggle', () => {
+    if (!retoSol.open) return;
+    guardarSilencioso(t => {
+      t.retoSolVista = true;
+      if (!t.reto) t.retoSolAntes = true;
+    });
+  });
+
+  /* =================== Entrega: resumen y PDF =================== */
+  function pintarResumenEntrega() {
+    const caja = document.getElementById('entrega-resumen');
+    if (!caja) return;
+    const resueltos = T.practica.filter((e, ei) => estado.practica[ei] === 'ok').length;
+    const items = [
+      ['Secciones completadas', GA.SECCIONES.filter(s => estado.secciones[s.id]).length + ' / ' + GA.SECCIONES.length],
+      ['Práctica resuelta', resueltos + ' / ' + T.practica.length],
+      ['Autoevaluación', estado.quiz ? estado.quiz.nota + ' / ' + estado.quiz.total : 'pendiente'],
+      ['Reto', estado.reto ? 'superado ★' : estado.retoIntentos ? 'intentado' : 'no intentado']
+    ];
+    caja.innerHTML = items.map(([k, v]) => `<div class="er-item"><span>${k}</span><b>${v}</b></div>`).join('');
+  }
+
+  const marca = r => r === true ? '<span class="rp-ok">✓</span>' : r === false ? '<span class="rp-mal">✗</span>' : r === null ? '<span class="rp-mal">?</span>' : '<span class="rp-nada">—</span>';
+
+  function construirReporte(alumno) {
+    const tiempo = GA._tiempoActual ? GA._tiempoActual() : estado.tiempo;
+    const fecha = new Date().toLocaleString('es-EC', { dateStyle: 'long', timeStyle: 'short' });
+    const resueltos = T.practica.filter((e, ei) => estado.practica[ei] === 'ok').length;
+
+    // Conocimientos previos
+    const previos = T.previos.map((q, qi) => {
+      const oi = estado.previos[qi];
+      const r = oi == null ? undefined : oi === q.correcta;
+      return `<tr><td class="rp-n">${qi + 1}</td><td>${q.pregunta}</td>
+        <td>${oi == null ? '<i>Sin responder</i>' : q.opciones[oi]}</td><td class="rp-c">${marca(r)}</td></tr>`;
+    }).join('');
+
+    // Práctica
+    const practica = T.practica.map((e, ei) => {
+      const resp = estado.resp[ei] || {};
+      const filas = e.campos.map((c, ci) => {
+        const v = resp[ci];
+        const r = evaluarCampo(c, v);
+        return `<tr><td>${c.etiqueta}</td><td class="rp-resp">${v == null || v === '' ? '<i>Sin responder</i>' : GA.esc(v)}</td><td class="rp-c">${marca(r)}</td></tr>`;
+      }).join('');
+      const notas = [];
+      notas.push(estado.practica[ei] === 'ok'
+        ? `Resuelto${estado.intentos[ei] ? ` en ${estado.intentos[ei]} intento(s)` : ''}`
+        : (estado.intentos[ei] ? `No resuelto (${estado.intentos[ei]} intento(s))` : 'No comprobado'));
+      if (estado.pistas[ei]) notas.push('usó la pista');
+      if (estado.solVista[ei]) notas.push('consultó la solución');
+      return `
+        <div class="rep-bloque">
+          ${ei === 0 ? '<h2>2. Práctica autónoma</h2>' : ''}
+          <p class="rp-ej"><b>Ejercicio ${ei + 1}</b> <span class="rp-nivel">${e.nivel}</span> — ${notas.join(' · ')}</p>
+          <div class="rp-enun">${e.enunciado}</div>
+          <table class="rp-tabla"><thead><tr><th>Dato pedido</th><th>Respuesta del estudiante</th><th></th></tr></thead><tbody>${filas}</tbody></table>
+        </div>`;
+    }).join('');
+
+    // Autoevaluación
+    let quiz;
+    if (estado.quiz && estado.quiz.respuestas) {
+      const filas = T.quiz.map((q, qi) => {
+        const oi = estado.quiz.respuestas[qi];
+        const r = oi == null ? undefined : oi === q.correcta;
+        return `<tr><td class="rp-n">${qi + 1}</td><td>${q.pregunta}</td>
+          <td>${oi == null ? '<i>Sin responder</i>' : q.opciones[oi]}</td><td class="rp-c">${marca(r)}</td></tr>`;
+      }).join('');
+      const hist = (estado.quizIntentos || []).length > 1
+        ? ` · Intentos: ${estado.quizIntentos.map(n => n + '/' + T.quiz.length).join(', ')}` : '';
+      quiz = `<p class="rp-sub">Calificación (último intento): <b>${estado.quiz.nota} / ${estado.quiz.total}</b>${hist}</p>
+        <table class="rp-tabla"><thead><tr><th>#</th><th>Pregunta</th><th>Respuesta del estudiante</th><th></th></tr></thead><tbody>${filas}</tbody></table>`;
+    } else {
+      quiz = '<p><i>La autoevaluación no fue realizada.</i></p>';
+    }
+
+    // Reto
+    let reto;
+    if (estado.retoIntentos) {
+      const valores = estado.retoValores
+        ? Object.entries(estado.retoValores).map(([k, v]) => `<span class="rp-var">${GA.esc(k)} = ${GA.esc(v)}</span>`).join(' ')
+        : '';
+      const notas = [`${estado.retoIntentos} comprobación(es)`];
+      if (estado.retoSolAntes) notas.push('consultó la solución antes de superarlo');
+      else if (estado.retoSolVista) notas.push('consultó la solución después de intentarlo');
+      reto = `<p>Resultado: <b>${estado.reto ? '★ Superado' : 'No superado'}</b> · ${notas.join(' · ')}</p>
+        <p class="rp-sub">Valores en la última comprobación: ${valores}</p>`;
+    } else {
+      reto = '<p><i>El reto (opcional) no fue intentado.</i></p>';
+    }
+
+    const el = document.createElement('div');
+    el.className = 'reporte';
+    el.innerHTML = `
+      <header class="rp-cab">
+        <div>
+          <p class="rp-eyebrow" style="color:${meta.color}">Taller autónomo · ${grupo.titulo} · ${grupo.nivel}</p>
+          <h1>${meta.titulo}</h1>
+        </div>
+      </header>
+      <table class="rp-datos">
+        <tr><th>Estudiante</th><td>${GA.esc(alumno.nombre)}</td></tr>
+        <tr><th>Curso / paralelo</th><td>${GA.esc(alumno.curso)}</td></tr>
+        <tr><th>Fecha de entrega</th><td>${fecha}</td></tr>
+      </table>
+      <div class="rp-resumen">
+        <div><span>Secciones</span><b>${GA.SECCIONES.filter(s => estado.secciones[s.id]).length}/${GA.SECCIONES.length}</b></div>
+        <div><span>Práctica</span><b>${resueltos}/${T.practica.length}</b></div>
+        <div><span>Autoevaluación</span><b>${estado.quiz ? estado.quiz.nota + '/' + estado.quiz.total : '—'}</b></div>
+        <div><span>Reto</span><b>${estado.reto ? '★' : estado.retoIntentos ? '✗' : '—'}</b></div>
+      </div>
+
+      <div class="rep-bloque"><h2>1. Conocimientos previos</h2><table class="rp-tabla"><thead><tr><th>#</th><th>Pregunta</th><th>Respuesta del estudiante</th><th></th></tr></thead><tbody>${previos}</tbody></table></div>
+
+      ${practica}
+
+      <div class="rep-bloque"><h2>3. Autoevaluación</h2>${quiz}</div>
+      <div class="rep-bloque"><h2>4. Reto GeoGebra</h2>${reto}</div>
+
+      <div class="rp-tiempo rep-bloque">
+        <span>Tiempo activo dedicado al taller</span>
+        <b>${GA.fmtTiempo(tiempo)}</b>
+        <small>${(tiempo / 60).toFixed(1)} min · cuenta solo con la página abierta y en uso; excluye pausas de más de 1 minuto.</small>
+      </div>
+      <p class="rp-pie">✓ correcta · ✗ incorrecta · ? formato no reconocido · — sin responder &nbsp;|&nbsp; Generado por los Talleres de matemática con GeoGebra</p>`;
+    return el;
+  }
+
+  function nombreArchivo(alumno) {
+    const limpio = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    return `Taller_${limpio(meta.titulo)}_${limpio(alumno.nombre)}.pdf`;
+  }
+
+  async function generarPDF(alumno, avisar) {
+    const el = construirReporte(alumno);
+    const lienzo = document.createElement('div');
+    lienzo.className = 'reporte-lienzo';
+    lienzo.appendChild(el);
+    document.body.appendChild(lienzo);
+    GA.renderMath(el);
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { /* */ }
+
+    if (typeof window.html2pdf === 'function') {
+      avisar('Generando PDF…');
+      try {
+        await window.html2pdf().set({
+          margin: [10, 10, 12, 10],
+          filename: nombreArchivo(alumno),
+          image: { type: 'jpeg', quality: 0.95 },
+          // scrollX/scrollY = 0: sin esto, si la página está desplazada, la captura sale en blanco
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'], avoid: ['.rep-bloque', 'tr', '.rp-cab'] }
+        }).from(el).save();
+        lienzo.remove();
+        return 'descargado';
+      } catch (e) {
+        console.warn('html2pdf falló, se usa la impresión del navegador', e);
+      }
+    }
+    // Alternativa: imprimir el reporte (el navegador permite "Guardar como PDF")
+    lienzo.remove();
+    const zona = document.getElementById('reporte-impresion');
+    zona.innerHTML = '';
+    zona.appendChild(el);
+    GA.renderMath(el);
+    imprimirCon('imprimiendo-reporte');
+    return 'impreso';
+  }
+
+  /* Diálogo de datos del estudiante */
+  (function () {
+    const dlg = document.getElementById('dlg-estudiante');
+    const form = document.getElementById('form-estudiante');
+    const inNombre = document.getElementById('est-nombre');
+    const inCurso = document.getElementById('est-curso');
+    const errN = document.getElementById('err-nombre');
+    const errC = document.getElementById('err-curso');
+    const estadoTxt = document.getElementById('dlg-estado');
+    const btnGen = document.getElementById('dlg-generar');
+
+    document.getElementById('crear-pdf').addEventListener('click', () => {
+      const d = GA.leerEstudiante();
+      inNombre.value = d.nombre || '';
+      inCurso.value = d.curso || '';
+      errN.hidden = errC.hidden = true;
+      estadoTxt.textContent = '';
+      btnGen.disabled = false;
+      if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+      inNombre.focus();
+    });
+    document.getElementById('dlg-cancelar').addEventListener('click', () => dlg.close());
+
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const nombre = inNombre.value.trim().replace(/\s+/g, ' ');
+      const curso = inCurso.value.trim().replace(/\s+/g, ' ');
+      const nombreOk = nombre.split(' ').filter(p => p.length >= 2).length >= 2;
+      errN.hidden = nombreOk;
+      errC.hidden = curso.length >= 2;
+      if (!nombreOk) { inNombre.focus(); return; }
+      if (curso.length < 2) { inCurso.focus(); return; }
+      GA.guardarEstudiante({ nombre, curso });
+      btnGen.disabled = true;
+      const r = await generarPDF({ nombre, curso }, t => { estadoTxt.textContent = t; });
+      estadoTxt.textContent = r === 'descargado' ? '✓ PDF descargado. Revisa tu carpeta de descargas.' : '';
+      btnGen.disabled = false;
+      setTimeout(() => { if (dlg.open) dlg.close(); }, r === 'descargado' ? 1600 : 0);
+    });
+  })();
 
   refrescarProgreso();
 })();
