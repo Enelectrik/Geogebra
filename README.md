@@ -20,7 +20,7 @@ Cada taller tiene la misma estructura (los minutos aparecen en pantalla y suman 
 | 3 | Exploración con GeoGebra (applet con deslizadores + lecturas en vivo + preguntas guía) | 6 min |
 | 4 | Definición y fórmulas (con los mismos colores que el applet) | 4 min |
 | 5 | Ejemplos resueltos (desplegables) | 5 min |
-| 6 | Práctica autónoma (4 ejercicios con corrección automática y pistas) | 7 min |
+| 6 | Práctica autónoma (4 ejercicios con corrección automática y pistas; la solución se habilita solo después de responder todas las casillas y pulsar «Comprobar») | 7 min |
 | 7 | Autoevaluación (5 preguntas con retroalimentación por opción) | 4 min |
 | 8 | Ficha de síntesis imprimible | 1 min |
 | ★ | Reto GeoGebra (comprobación automática; la solución se habilita solo después de pulsar «Comprobar reto») | extra |

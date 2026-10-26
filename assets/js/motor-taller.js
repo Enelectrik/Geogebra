@@ -210,7 +210,8 @@
         </div>
         <p class="pista" hidden>${e.pista}</p>
         <p class="retro-ej" hidden></p>
-        <details class="solucion" data-sol="${ei}">
+        <p class="nota sol-bloqueada" data-lock="${ei}">🔒 La solución se habilita cuando respondas todas las casillas y pulses «Comprobar».</p>
+        <details class="solucion" data-sol="${ei}" hidden>
           <summary>Ver solución</summary>
           <div>${e.solucion}</div>
         </details>
@@ -487,6 +488,10 @@
     const e = T.practica[ei];
     const retro = art.querySelector('.retro-ej');
     const est = art.querySelector('.ej-estado');
+    const sol = art.querySelector('[data-sol]');
+    const candado = art.querySelector('[data-lock]');
+    const desbloquear = () => { sol.hidden = false; candado.hidden = true; };
+    if (estado.solDesbloq[ei]) desbloquear();
     const marcar = () => {
       art.classList.remove('resuelto', 'visto');
       est.textContent = '';
@@ -512,12 +517,15 @@
       });
       retro.hidden = false;
       const todo = bien === e.campos.length;
+      const respondido = vacios === 0 && raros === 0;   // todas las casillas con una respuesta válida
       if (contar) {
         guardar(t => {
           t.resp[ei] = valores;
           t.intentos[ei] = (t.intentos[ei] || 0) + 1;
           if (todo) t.practica[ei] = 'ok';
+          if (respondido) t.solDesbloq[ei] = true;
         });
+        if (respondido) desbloquear();
       }
       if (todo) {
         retro.className = 'retro-ej retro-ok';
@@ -559,8 +567,8 @@
       p.hidden = !p.hidden;
       if (!p.hidden && !estado.pistas[ei]) guardarSilencioso(t => { t.pistas[ei] = true; });
     });
-    art.querySelector('[data-sol]').addEventListener('toggle', ev => {
-      if (!ev.target.open) return;
+    sol.addEventListener('toggle', ev => {
+      if (!ev.target.open || sol.hidden) return;
       guardar(t => {
         t.solVista[ei] = true;
         if (!t.practica[ei]) t.practica[ei] = 'visto';

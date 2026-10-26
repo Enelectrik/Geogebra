@@ -135,6 +135,7 @@
     intentos: {},       // ejercicio → nº de veces que pulsó "Comprobar"
     pistas: {},         // ejercicio → true si abrió la pista
     solVista: {},       // ejercicio → true si abrió la solución
+    solDesbloq: {},     // ejercicio → true cuando ya respondió todo y pulsó Comprobar
     retoIntentos: 0, retoValores: null, retoSolVista: false, retoSolAntes: false
   });
 
